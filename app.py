@@ -17,7 +17,7 @@ from dotenv import load_dotenv
 load_dotenv()
 os.environ["NVIDIA_API_KEY"] = os.getenv("NVIDIA_API_KEY")
 
-st.set_page_config(page_title="Memory-Only RAG Chatbot", page_icon="🧠")
+st.set_page_config(page_title="RAG Chatbot", page_icon="🧠")
 st.title("🧠 RAG Chatbot For Document Search")
 
 # -----------------------
