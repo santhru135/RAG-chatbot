@@ -1,2 +1,2 @@
 # RAG-chatbot
-Answer based on the given database
+Answer based on the given document
