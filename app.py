@@ -30,7 +30,7 @@ GEMMA_MODEL_NAME = "google/gemma-3n-e4b-it"
 # -----------------------
 # INIT embedding + splitter
 # -----------------------
-@st.cache_resource
+@st.cache_resource(show_spinner=False)
 def get_embedding_and_splitter():
     embedding = HuggingFaceEmbeddings(
         model_name=EMBEDDING_MODEL,
@@ -139,12 +139,23 @@ if files:
 prompt = ChatPromptTemplate.from_messages([
     (
         "system",
-        "Answer ONLY using the provided context.\n\n"
-        "Context:\n{context}\n\n"
-        "If answer is missing, say: 'I don't have that information.'"
+        "You are a helpful assistant.\n\n"
+        "Always follow this order of priority when answering:\n"
+        "1. First, answer strictly using the provided context.\n"
+        "2. If the context does not contain enough information, then answer using your\n"
+        "   own general knowledge — but ONLY if the information is factual,\n"
+        "   verified, and widely accepted.\n\n"
+        "Rules:\n"
+        "- Do NOT guess or make up details.\n"
+        "- Do NOT hallucinate any facts.\n"
+        "- If you are unsure or the information is not reliable, respond with:\n"
+        "  \"I'm not fully sure, but based on my general knowledge: <answer>.\"\n"
+        "- Always keep the answer truthful and relevant to the question.\n\n"
+        "Context:\n{context}"
     ),
     ("user", "{question}")
 ])
+
 
 def get_chain():
     if not os.environ.get("NVIDIA_API_KEY"):
