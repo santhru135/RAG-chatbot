@@ -18,6 +18,22 @@ load_dotenv()
 os.environ["NVIDIA_API_KEY"] = os.getenv("NVIDIA_API_KEY")
 
 st.set_page_config(page_title="RAG Chatbot", page_icon="🧠")
+
+# Sidebar with About section
+with st.sidebar:
+    st.title("About")
+    st.markdown("""
+    This is a RAG (Retrieval-Augmented Generation) chatbot that can answer questions about your uploaded documents using AI-powered search.
+    
+    ### How to use
+    - 📤 Upload your documents (PDF, DOCX, TXT, CSV)
+    - 💬 Ask questions about the content
+    - 🔍 Get accurate answers with source references
+    
+    ### To clear the history
+    - Click on the "Clear History" button in the sidebar
+    """)
+
 st.title("🧠 RAG Chatbot For Document Search")
 
 # -----------------------
@@ -199,4 +215,4 @@ for role, msg in st.session_state.chat_history:
 # -----------------------
 # Sidebar: Clear memory
 # -----------------------
-st.sidebar.button("Clear Memory", on_click=lambda: st.session_state.clear())
+st.sidebar.button("Clear History", on_click=lambda: st.session_state.clear())
