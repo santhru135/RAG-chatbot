@@ -30,7 +30,7 @@ GEMMA_MODEL_NAME = "google/gemma-3n-e4b-it"
 # -----------------------
 # INIT embedding + splitter
 # -----------------------
-@st.cache_resource(show_spinner=False)
+@st.cache_resource(show_spinner=False) 
 def get_embedding_and_splitter():
     embedding = HuggingFaceEmbeddings(
         model_name=EMBEDDING_MODEL,
@@ -117,7 +117,7 @@ def add_document_to_vectorstore(text, name, store):
 # -----------------------
 # Upload UI
 # -----------------------
-st.subheader("Upload files (Stored only in RAM)")
+st.subheader("Upload files")
 files = st.file_uploader("Choose files", type=["pdf", "docx", "txt", "csv"], accept_multiple_files=True)
 
 if files:
@@ -164,7 +164,7 @@ def get_chain():
     model = ChatNVIDIA(model=GEMMA_MODEL_NAME)
     return (prompt | model | StrOutputParser())
 
-# -----------------------
+# -----------------------   
 # Chat
 # -----------------------
 st.subheader("Ask a question")
