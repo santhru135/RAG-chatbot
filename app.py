@@ -33,6 +33,7 @@ with st.sidebar:
     ### To clear the history
     - Click on the "Clear History" button in the sidebar
     """)
+st.sidebar.button("Clear History", on_click=lambda: st.session_state.clear())
 
 st.title("🧠 RAG Chatbot For Document Search")
 
@@ -211,8 +212,3 @@ if query:
 for role, msg in st.session_state.chat_history:
     with st.chat_message(role):
         st.markdown(msg)
-
-# -----------------------
-# Sidebar: Clear memory
-# -----------------------
-st.sidebar.button("Clear History", on_click=lambda: st.session_state.clear())
