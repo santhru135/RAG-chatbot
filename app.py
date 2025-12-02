@@ -1,4 +1,3 @@
-# file: app.py
 import os
 import io
 import streamlit as st
@@ -19,7 +18,6 @@ os.environ["NVIDIA_API_KEY"] = os.getenv("NVIDIA_API_KEY")
 
 st.set_page_config(page_title="RAG Chatbot", page_icon="🧠")
 
-# Sidebar with About section
 with st.sidebar:
     st.title("About")
     st.markdown("""
@@ -37,9 +35,6 @@ st.sidebar.button("Clear History", on_click=lambda: st.session_state.clear())
 
 st.title("🧠 RAG Chatbot For Document Search")
 
-# -----------------------
-# CONSTANTS
-# -----------------------
 EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 EMBEDDING_DEVICE = "cpu"
 GEMMA_MODEL_NAME = "google/gemma-3n-e4b-it"
@@ -59,7 +54,7 @@ def get_embedding_and_splitter():
 embedding, text_splitter = get_embedding_and_splitter()
 
 # -----------------------
-# MEMORY-ONLY VECTORSTORE (RAM)
+# MEMORY-ONLY VECTORSTORE
 # -----------------------
 if "vectorstore" not in st.session_state:
     st.session_state.vectorstore = None   # stays only in RAM
@@ -68,9 +63,7 @@ if "vectorstore" not in st.session_state:
 if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 
-# -----------------------
 # File extractors
-# -----------------------
 def extract_text_from_pdf(file):
     try:
         reader = PdfReader(file)
