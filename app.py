@@ -111,9 +111,7 @@ def extract_text(uploaded):
     except:
         return ""
 
-# -----------------------
-# Add to vectorstore (RAM only)
-# -----------------------
+# Add to vectorstore
 def add_document_to_vectorstore(text, name, store):
     chunks = text_splitter.split_text(text)
     metas = [{"source": name, "chunk": i} for i in range(len(chunks))]
@@ -124,9 +122,7 @@ def add_document_to_vectorstore(text, name, store):
         store.add_texts(chunks, metadatas=metas)
     return store
 
-# -----------------------
 # Upload UI
-# -----------------------
 st.subheader("Upload files")
 files = st.file_uploader("Choose files", type=["pdf", "docx", "txt", "csv"], accept_multiple_files=True)
 
@@ -143,9 +139,7 @@ if files:
 
     st.success("Files added to memory successfully!")
 
-# -----------------------
 # LLM Chain
-# -----------------------
 prompt = ChatPromptTemplate.from_messages([
     (
         "system",
@@ -173,10 +167,8 @@ def get_chain():
         return None
     model = ChatNVIDIA(model=GEMMA_MODEL_NAME)
     return (prompt | model | StrOutputParser())
-
-# -----------------------   
+  
 # Chat
-# -----------------------
 st.subheader("Ask a question")
 query = st.chat_input("Type here...")
 
