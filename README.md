@@ -25,47 +25,34 @@ The chatbot supports PDF, DOCX, TXT, and CSV files as input.
 
 ## Getting Started
 1. Clone the repository:
-```bash
 git clone <your-repo-link>
 
-    Install dependencies:
-
+2.Install dependencies:
 pip install -r requirements.txt
 
-    Set your NVIDIA API key in a .env file:
-
+3.Set your NVIDIA API key in a .env file:
 NVIDIA_API_KEY=your_api_key_here
 
-    Run the Streamlit app:
-
+4.Run the Streamlit app:
 streamlit run app.py
 
-Usage
+## Usage
 
-    Open the app in your browser.
+-> Open the app in your browser.
+-> Upload your documents (PDF, DOCX, TXT, CSV).
+-> Type your question in the chat input.
+-> The chatbot retrieves relevant content from the uploaded documents and generates answers.
+-> Clear chat history using the Clear History button in the sidebar if needed.
 
-    Upload your documents (PDF, DOCX, TXT, CSV).
+## File Support
 
-    Type your question in the chat input.
+-> PDF: Extracts text from pages.
+-> DOCX: Extracts text from paragraphs.
+-> TXT: Reads plain text files.
+-> CSV: Converts rows into readable text format for Q&A.
 
-    The chatbot retrieves relevant content from the uploaded documents and generates answers.
+## Future Improvements
 
-    Clear chat history using the Clear History button in the sidebar if needed.
-
-File Support
-
-    PDF: Extracts text from pages.
-
-    DOCX: Extracts text from paragraphs.
-
-    TXT: Reads plain text files.
-
-    CSV: Converts rows into readable text format for Q&A.
-
-Future Improvements
-
-    Support for larger knowledge bases or multiple users.
-
-    Multi-modal input support (images, tables, etc.).
-
-    Enhanced document parsing for better accuracy.
+-> Support for larger knowledge bases or multiple users.
+-> Multi-modal input support (images, tables, etc.).
+-> Enhanced document parsing for better accuracy.
