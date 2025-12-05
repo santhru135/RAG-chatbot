@@ -24,7 +24,7 @@ The chatbot supports PDF, DOCX, TXT, and CSV files as input.
 - python-docx, pypdf (document parsing)  
 
 ## Getting Started
-1. Clone the repository:
+1.Clone the repository:
 git clone <your-repo-link>
 
 2.Install dependencies:
@@ -39,20 +39,29 @@ streamlit run app.py
 ## Usage
 
 -> Open the app in your browser.
+
 -> Upload your documents (PDF, DOCX, TXT, CSV).
+
 -> Type your question in the chat input.
+
 -> The chatbot retrieves relevant content from the uploaded documents and generates answers.
+
 -> Clear chat history using the Clear History button in the sidebar if needed.
 
 ## File Support
 
 -> PDF: Extracts text from pages.
+
 -> DOCX: Extracts text from paragraphs.
+
 -> TXT: Reads plain text files.
+
 -> CSV: Converts rows into readable text format for Q&A.
 
 ## Future Improvements
 
 -> Support for larger knowledge bases or multiple users.
+
 -> Multi-modal input support (images, tables, etc.).
+
 -> Enhanced document parsing for better accuracy.
