@@ -1,46 +1,71 @@
-RAG Chatbot – Document-Based Information Retrieval
+# RAG Chatbot – Document-Based Information Retrieval
 
-Overview:
-This project implements a Retrieval-Augmented Generation (RAG) chatbot that retrieves information from a document-based knowledge base and generates context-aware responses using a Large Language Model (LLM). All processing is performed entirely in-memory for fast, real-time answers.
+## Overview
+This project implements a **Retrieval-Augmented Generation (RAG) chatbot** that can answer questions about your uploaded documents using AI-powered search. It retrieves relevant information from a document-based knowledge base and generates context-aware responses using a Large Language Model (LLM). All processing is performed entirely **in-memory** for fast, real-time responses.
 
-Features:
+The chatbot supports PDF, DOCX, TXT, and CSV files as input.
 
-In-memory vector storage using FAISS for fast document similarity search.
+## Features
+- Upload multiple documents and perform AI-powered Q&A.  
+- In-memory vector storage using **FAISS** for fast document similarity search.  
+- **LLM integration** with NVIDIA NIM and Gemma-3n-e4b-it for context-aware responses.  
+- Strict rules to prevent hallucination and ensure factual answers.  
+- Chat history support with the ability to clear it anytime.  
+- Supports PDFs, Word documents, text files, and CSVs.  
 
-LLM integration with NVIDIA NIM and Gemma-3n-e4b-it for intelligent, context-aware responses.
+## Technologies Used
+- Python  
+- Streamlit (Web interface)  
+- LangChain (RAG pipeline)  
+- FAISS (In-memory vector store)  
+- NVIDIA NIM + Gemma-3n-e4b-it (LLM inference)  
+- HuggingFace Embeddings (sentence-transformers/all-MiniLM-L6-v2)  
+- Pandas (for CSV processing)  
+- python-docx, pypdf (document parsing)  
 
-Document-based retrieval ensures accurate answers from structured knowledge sources.
-
-Optimized for low-latency queries, making it suitable for real-time applications.
-
-Technologies Used:
-Python, FAISS, NVIDIA NIM, LangChain, Gemma-3n-e4b-it, NLP
-
-Getting Started:
-
-Clone the repository:
-
+## Getting Started
+1. Clone the repository:
+```bash
 git clone <your-repo-link>
 
-
-Install dependencies:
+    Install dependencies:
 
 pip install -r requirements.txt
 
+    Set your NVIDIA API key in a .env file:
 
-Run the chatbot:
+NVIDIA_API_KEY=your_api_key_here
 
-python app.py
+    Run the Streamlit app:
 
+streamlit run app.py
 
-Usage:
+Usage
 
-Provide documents (PDFs, text files, etc.) as input.
+    Open the app in your browser.
 
-The chatbot processes the documents, stores them in memory, and answers questions based on their content.
+    Upload your documents (PDF, DOCX, TXT, CSV).
 
-Future Improvements:
+    Type your question in the chat input.
 
-Support for larger document collections.
+    The chatbot retrieves relevant content from the uploaded documents and generates answers.
 
-Integration with external APIs or web sources for dynamic content.
+    Clear chat history using the Clear History button in the sidebar if needed.
+
+File Support
+
+    PDF: Extracts text from pages.
+
+    DOCX: Extracts text from paragraphs.
+
+    TXT: Reads plain text files.
+
+    CSV: Converts rows into readable text format for Q&A.
+
+Future Improvements
+
+    Support for larger knowledge bases or multiple users.
+
+    Multi-modal input support (images, tables, etc.).
+
+    Enhanced document parsing for better accuracy.
