@@ -1,199 +1,139 @@
+"""
+app.py — Entry point for the RAG chatbot.
+
+Wires together the backend (rag_logic.py) and UI (ui.py).
+Run with:  streamlit run app.py
+"""
+
 import os
-import io
 import streamlit as st
-from typing import List, Dict
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import FAISS
-from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_nvidia import ChatNVIDIA
-from langchain.prompts import ChatPromptTemplate
-from langchain.schema.output_parser import StrOutputParser
-from docx import Document
-from pypdf import PdfReader
-import pandas as pd
 from dotenv import load_dotenv
 
+# Load environment variables
 load_dotenv()
 os.environ["NVIDIA_API_KEY"] = os.getenv("NVIDIA_API_KEY")
 
-st.set_page_config(page_title="RAG Chatbot", page_icon="🧠")
+# ── Backend & UI imports ──
+from rag_logic import (
+    extract_text,
+    add_document_to_vectorstore,
+    retrieve_documents,
+    collect_sources,
+    build_context,
+    get_chain,
+)
+from ui import (
+    inject_custom_css,
+    init_session_state,
+    render_sidebar,
+    render_header,
+    render_empty_state,
+    render_chat_history,
+    render_source_chips,
+    render_footer,
+)
 
-with st.sidebar:
-    st.title("About")
-    st.markdown("""
-    This is a RAG (Retrieval-Augmented Generation) chatbot that can answer questions about your uploaded documents using AI-powered search.
-    
-    ### How to use
-    - 📤 Upload your documents (PDF, DOCX, TXT, CSV)
-    - 💬 Ask questions about the content
-    - 🔍 Get accurate answers with source references
-    
-    ### To clear the history
-    - Click on the "Clear History" button in the sidebar
-    """)
-st.sidebar.button("Clear History", on_click=lambda: st.session_state.clear())
 
-st.title("🧠 RAG Chatbot For Document Search")
+# ═══════════════════════════════════════════════════════════════
+# PAGE CONFIG
+# ═══════════════════════════════════════════════════════════════
+st.set_page_config(
+    page_title="AI Document Assistant",
+    page_icon="🧿",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
 
-EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
-EMBEDDING_DEVICE = "cpu"
-GEMMA_MODEL_NAME = "google/gemma-3n-e4b-it"
+# ── Setup ──
+inject_custom_css()
+init_session_state()
 
-# -----------------------
-# INIT embedding + splitter
-# -----------------------
-@st.cache_resource(show_spinner=False) 
-def get_embedding_and_splitter():
-    embedding = HuggingFaceEmbeddings(
-        model_name=EMBEDDING_MODEL,
-        model_kwargs={"device": EMBEDDING_DEVICE}
-    )
-    splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
-    return embedding, splitter
 
-embedding, text_splitter = get_embedding_and_splitter()
-
-# -----------------------
-# MEMORY-ONLY VECTORSTORE
-# -----------------------
-if "vectorstore" not in st.session_state:
-    st.session_state.vectorstore = None   # stays only in RAM
-
-# Chat history
-if "chat_history" not in st.session_state:
-    st.session_state.chat_history = []
-
-# File extractors
-def extract_text_from_pdf(file):
-    try:
-        reader = PdfReader(file)
-        return "\n".join([page.extract_text() or "" for page in reader.pages])
-    except:
-        return ""
-
-def extract_text_from_docx(file_obj):
-    try:
-        doc = Document(file_obj)
-        return "\n".join(p.text for p in doc.paragraphs)
-    except:
-        return ""
-
-def extract_text_from_txt(file_obj):
-    try:
-        raw = file_obj.read()
-        if isinstance(raw, bytes):
-            return raw.decode("utf-8", errors="ignore")
-        return str(raw)
-    except:
-        return ""
-
-def extract_text_from_csv(file_obj):
-    try:
-        df = pd.read_csv(file_obj)
-        rows = []
-        for _, row in df.iterrows():
-            rows.append(" | ".join([f"{c}: {row[c]}" for c in df.columns]))
-        return "\n".join(rows)
-    except:
-        return ""
-
-def extract_text(uploaded):
-    if uploaded.type == "application/pdf":
-        return extract_text_from_pdf(uploaded)
-    if uploaded.type == "text/plain":
-        return extract_text_from_txt(uploaded)
-    if uploaded.type == "text/csv":
-        return extract_text_from_csv(uploaded)
-    if uploaded.type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
-        return extract_text_from_docx(uploaded)
-    try:
-        return uploaded.read().decode("utf-8", errors="ignore")
-    except:
-        return ""
-
-# Add to vectorstore
-def add_document_to_vectorstore(text, name, store):
-    chunks = text_splitter.split_text(text)
-    metas = [{"source": name, "chunk": i} for i in range(len(chunks))]
-
-    if store is None:
-        store = FAISS.from_texts(chunks, embedding, metadatas=metas)
-    else:
-        store.add_texts(chunks, metadatas=metas)
-    return store
-
-# Upload UI
-st.subheader("Upload files")
-files = st.file_uploader("Choose files", type=["pdf", "docx", "txt", "csv"], accept_multiple_files=True)
+# ═══════════════════════════════════════════════════════════════
+# SIDEBAR — file upload & processing
+# ═══════════════════════════════════════════════════════════════
+files = render_sidebar()
 
 if files:
-    for uploaded in files:
-        text = extract_text(uploaded)
-        if text.strip() == "":
-            st.warning(f"Could not extract text from {uploaded.name}")
-            continue
+    new_files = [f for f in files if f.file_id not in st.session_state.processed_file_keys]
 
-        st.session_state.vectorstore = add_document_to_vectorstore(
-            text, uploaded.name, st.session_state.vectorstore
-        )
+    if new_files:
+        st.session_state.processing = True
+        with st.sidebar:
+            with st.spinner("Embedding documents..."):
+                for uploaded in new_files:
+                    text = extract_text(uploaded)
+                    if text.strip() == "":
+                        st.warning(f"⚠️ Could not extract text from **{uploaded.name}**")
+                        continue
 
-    st.success("Files added to memory successfully!")
+                    st.session_state.vectorstore = add_document_to_vectorstore(
+                        text, uploaded.name, st.session_state.vectorstore
+                    )
+                    st.session_state.uploaded_files_info.append({
+                        "name": uploaded.name,
+                        "size": uploaded.size,
+                    })
+                    st.session_state.processed_file_keys.add(uploaded.file_id)
 
-# LLM Chain
-prompt = ChatPromptTemplate.from_messages([
-    (
-        "system",
-        "You are a helpful assistant.\n\n"
-        "Always follow this order of priority when answering:\n"
-        "1. First, answer strictly using the provided context.\n"
-        "2. If the context does not contain enough information, then answer using your\n"
-        "   own general knowledge — but ONLY if the information is factual,\n"
-        "   verified, and widely accepted.\n\n"
-        "Rules:\n"
-        "- Do NOT guess or make up details.\n"
-        "- Do NOT hallucinate any facts.\n"
-        "- If you are unsure or the information is not reliable, respond with:\n"
-        "  \"I'm not fully sure, but based on my general knowledge: <answer>.\"\n"
-        "- Always keep the answer truthful and relevant to the question.\n\n"
-        "Context:\n{context}"
-    ),
-    ("user", "{question}")
-])
+        st.session_state.processing = False
+        st.toast("✅ Documents processed successfully!", icon="🎉")
+        st.rerun()
 
 
-def get_chain():
-    if not os.environ.get("NVIDIA_API_KEY"):
-        st.error("NVIDIA_API_KEY missing!")
-        return None
-    model = ChatNVIDIA(model=GEMMA_MODEL_NAME)
-    return (prompt | model | StrOutputParser())
+# ═══════════════════════════════════════════════════════════════
+# MAIN AREA
+# ═══════════════════════════════════════════════════════════════
+render_header()
+render_empty_state()
+render_chat_history()
 
-# Chat
-st.subheader("Ask a question")
-query = st.chat_input("Type here...")
+
+# ═══════════════════════════════════════════════════════════════
+# CHAT INPUT & RESPONSE
+# ═══════════════════════════════════════════════════════════════
+query = st.chat_input("Ask questions about your documents...")
 
 if query:
     if st.session_state.vectorstore is None:
-        st.error("Upload documents first.")
+        st.error("📤 Please upload documents first using the sidebar.")
         st.stop()
 
-    retriever = st.session_state.vectorstore.as_retriever(search_kwargs={"k": 3})
-    docs = retriever.get_relevant_documents(query)
+    # Display user message
+    with st.chat_message("user", avatar="🧑‍💻"):
+        st.markdown(query)
+
+    # Retrieve relevant documents
+    docs = retrieve_documents(st.session_state.vectorstore, query)
+    sources = collect_sources(docs)
 
     if not docs:
-        answer = "I don't have that information."
+        answer = "I don't have enough information in the uploaded documents to answer that question."
+        with st.chat_message("assistant", avatar="🧿"):
+            st.markdown(answer)
     else:
-        context = "\n\n".join(
-            f"[{d.metadata['source']}::chunk{d.metadata['chunk']}] {d.page_content}"
-            for d in docs
-        )
+        context = build_context(docs)
         chain = get_chain()
-        answer = chain.invoke({"question": query, "context": context}).strip()
+        if chain is None:
+            st.stop()
 
-    st.session_state.chat_history.append(("user", query))
-    st.session_state.chat_history.append(("assistant", answer))
+        # Streaming response
+        with st.chat_message("assistant", avatar="🧿"):
+            answer = st.write_stream(
+                chain.stream({"question": query, "context": context})
+            )
 
-# Show chat history
-for role, msg in st.session_state.chat_history:
-    with st.chat_message(role):
-        st.markdown(msg)
+    # Show source references
+    if sources:
+        with st.expander(f"📚 Sources ({len(sources)} references)"):
+            st.markdown(render_source_chips(sources), unsafe_allow_html=True)
+
+    # Save to history
+    st.session_state.chat_history.append(("user", query, []))
+    st.session_state.chat_history.append(("assistant", answer, sources))
+
+
+# ═══════════════════════════════════════════════════════════════
+# FOOTER
+# ═══════════════════════════════════════════════════════════════
+render_footer()
